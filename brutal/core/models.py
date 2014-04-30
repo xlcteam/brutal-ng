@@ -244,6 +244,8 @@ class Action(object):
         self.action_type = action_type
         self.meta = meta or {}
 
+        self.log.debug('source_event {0!r}'.format(vars(self.source_event)))
+
     def __repr__(self):
         return "<{0} {1}:{2} dest:{3}>".format(self.__class__.__name__, self.source_bot.nick, self.action_type,
                                                [bot.nick for bot in self.destination_bots])

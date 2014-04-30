@@ -343,10 +343,15 @@ class SimpleIrcBotProtocol(irc.IRCClient):
 
         # parse if we're the owner / message was to bot directly
         if channel == self.nickname:
-            event_data = {'type': 'message', 'scope': 'private', 'meta': {'from': user, 'body': message}}
+            event_data = {'type': 'message',
+                          'scope': 'private',
+                          'meta': {'from': user, 'body': message}}
         else:
-            event_data = {'type': 'message', 'scope': 'public', 'channel': channel, 'meta': {'from': user,
-                                                                                             'body': message}}
+            event_data = {'type': 'message',
+                          'scope': 'public',
+                          'channel': channel,
+                          'meta': {'from': user,
+                                   'body': message}}
 
         self._bot_process_event(event_data)
 
@@ -361,10 +366,16 @@ class SimpleIrcBotProtocol(irc.IRCClient):
 
         # parse if we're the owner / message was to bot directly
         if channel == self.nickname:
-            event_data = {'type': 'message', 'scope': 'private', 'meta': {'from': user, 'body': data, 'emote': True}}
+            event_data = {'type': 'message',
+                          'scope': 'private',
+                          'meta': {'from': user, 'body': data, 'emote': True}}
         else:
-            event_data = {'type': 'message', 'scope': 'public', 'channel': channel, 'meta': {'from': user, 'body': data,
-                                                                                             'emote': True}}
+            event_data = {'type': 'message',
+                          'scope': 'public',
+                          'channel': channel,
+                          'meta': {'from': user,
+                                   'body': data,
+                                   'emote': True}}
 
         self._bot_process_event(event_data)
 
@@ -402,6 +413,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         if action.action_type == 'message':
             body = action.meta.get('body')
             if body:
+                log.msg('action {0!r}'.format(vars(action)), logLevel=logging.DEBUG)
                 for dest in action.destination_rooms:
                     if dest:
                         if dest[0] == '#':
