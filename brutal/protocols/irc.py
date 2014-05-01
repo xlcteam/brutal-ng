@@ -316,12 +316,17 @@ class SimpleIrcBotProtocol(irc.IRCClient):
     """
     event_version = '1'
 
+    recipients_split_regex = '^((?:[\s]*[0-9A-Za-z_-~]{0,12}[\s]*:[\s]*)+)(.*)$'
+
+
     def __init__(self):
         self.channel_users = {}
         #TODO: accept these as init vars
         self.hostname = 'brutal_bot'
         self.realname = 'brutal_bot'
         self.username = 'brutal_bot'
+
+        self.recipients_regex = re.compile(self.recipients_split_regex)
 
     @property
     def nickname(self):
@@ -341,17 +346,35 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         nick, _, host = user.partition('!')
         message = message.strip()
 
+        recipients = []
+        match = self.recipients_regex.findall(message)
+        if match is not []:
+            cleaned_recipients = match[0].strip().split(':')[:-1]
+            recipients = [recipient.strip() for recipient in cleaned_recipients]
+
+        event_data = {'type': 'message',
+                      'scope': 'private',
+                      'source': 'query',
+                      'meta': {
+                          'from': user,
+                          'body': message,
+                          'nick': nick,
+                          'host': host}
+                    }
+
+
         # parse if we're the owner / message was to bot directly
         if channel == self.nickname:
-            event_data = {'type': 'message',
-                          'scope': 'private',
-                          'meta': {'from': user, 'body': message}}
+            event_data['source'] = 'query'
         else:
-            event_data = {'type': 'message',
-                          'scope': 'public',
-                          'channel': channel,
-                          'meta': {'from': user,
-                                   'body': message}}
+            event_data['channel'] = channel
+            if self.nickname in recipients:
+                event_data['source'] = 'highlight'
+                event_data['meta']['message'] = match[1].strip()
+            else:
+                event['source'] = 'room'
+            
+
 
         self._bot_process_event(event_data)
 
