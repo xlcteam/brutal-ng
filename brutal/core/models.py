@@ -265,6 +265,9 @@ class Action(object):
             self.scope = self.source_event.scope
             self.source = self.source_event.source
 
+            if self.source == 'query':
+                self.destination_rooms.append(self.source_event.meta['nick'])
+
 
 
         self.log.debug('source_event {0!r}'.format(vars(self.source_event)))

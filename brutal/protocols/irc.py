@@ -368,6 +368,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         # parse if we're the owner / message was to bot directly
         if channel == self.nickname:
             event_data['source'] = 'query'
+            event_data['meta']['recipients'] = [self.nickname]
         else:
             event_data['channel'] = channel
             event_data['meta']['recipients'] = recipients
