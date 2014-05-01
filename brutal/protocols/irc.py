@@ -427,6 +427,102 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         log.msg('irc_unknown - prefix: {0!r}, cmd: {1!r}, params: {2!r}'.format(prefix, command, params),
                 logLevel=logging.DEBUG)
 
+    def userJoined(self, user, channel):
+        log.msg('userJoined - user: {0!r}, channel: {1!r}'.format(user, channel), logLevel=logging.DEBUG)
+
+        nick, _, host = user.partition('!')
+        event_data = {'type': 'join',
+                      'scope': 'public',
+                      'channel': channel,
+                      'meta': {
+                            'nick': nick,
+                            'host': host,
+                            'from': user
+                          }}
+
+        self._bot_process_event(event_data)
+
+    def userLeft(self, user, channel):
+        log.msg('userLeft - tuser: {0!r}, channel: {1!r}'.format(user, channel), logLevel=logging.DEBUG)
+        nick, _, host = user.partition('!')
+        event_data = {'type': 'part',
+                      'scope': 'public',
+                      'channel': channel,
+                      'meta': {
+                            'nick': nick,
+                            'host': host,
+                            'from': user
+                          }}
+
+        self._bot_process_event(event_data)
+
+    def userQuit(self, user, quitMessage):
+        log.msg('userQuit - user: {0!r}, quit msg: {1!r}'.format(user, quitMessage), logLevel=logging.DEBUG)
+        nick, _, host = user.partition('!')
+        event_data = {'type': 'quit',
+                      'scope': 'public',
+                      'channel': channel,
+                      'meta': {
+                            'nick': nick,
+                            'host': host,
+                            'from': user,
+                            'message': quitMessage
+                          }}
+
+        self._bot_process_event(event_data)
+
+
+    def userKicked(self, kickee, channel, kicker, message):
+        log.msg('userKicked - user: {0!r}, channel: {1!r}, kicker: {2!r}, msg: {3!r}'.format(kickee, channel, kicker, message), logLevel=logging.DEBUG)
+        nick, _, host = kicker.partition('!')
+        event_data = {'type': 'kick',
+                      'scope': 'public',
+                      'channel': channel,
+                      'meta': {
+                            'nick': nick,
+                            'host': host,
+                            'from': user,
+                            'kickee': kickee
+                          }}
+
+        self._bot_process_event(event_data)
+
+
+    def topicUpdated(self, user, channel, newTopic):
+        log.msg('topicUpdated - user: {0!r}, channel: {1!r}, topic: {2!r}'.format(user, channel, newTopic),
+                logLevel=logging.DEBUG)
+        nick, _, host = user.partition('!')
+        event_data = {'type': 'topic',
+                      'scope': 'public',
+                      'channel': channel,
+                      'meta': {
+                            'nick': nick,
+                            'host': host,
+                            'from': user,
+                            'topic':newTopic
+                          }}
+
+        self._bot_process_event(event_data)
+
+
+    def userRenamed(self, oldname, newname):
+        log.msg('userRenamed - old: {0!r}, new: {1!r}'.format(oldname, newname), logLevel=logging.DEBUG)
+
+        nick, _, host = oldname.partition('!')
+        event_data = {'type': 'rename',
+                      'scope': 'public',
+                      'channel': channel,
+                      'meta': {
+                            'nick': nick,
+                            'host': host,
+                            'from': user,
+                            'new_name': newname
+                          }}
+
+        self._bot_process_event(event_data)
+
+
+
     #-- BOT SPECIFIC
     def _bot_process_event(self, raw_event):
         """
