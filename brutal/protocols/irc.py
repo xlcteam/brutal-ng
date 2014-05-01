@@ -6,6 +6,8 @@ from twisted.words.protocols import irc
 from brutal.protocols.core import ProtocolBackend
 #from brutal.protocols.core import catch_error
 
+import re
+
 IRC_DEFAULT_PORT = 6667
 
 # OLD
@@ -348,8 +350,8 @@ class SimpleIrcBotProtocol(irc.IRCClient):
 
         recipients = []
         match = self.recipients_regex.findall(message)
-        if match is not []:
-            cleaned_recipients = match[0].strip().split(':')[:-1]
+        if match != []:
+            cleaned_recipients = match[0][0].strip().split(':')[:-1]
             recipients = [recipient.strip() for recipient in cleaned_recipients]
 
         event_data = {'type': 'message',
@@ -368,11 +370,12 @@ class SimpleIrcBotProtocol(irc.IRCClient):
             event_data['source'] = 'query'
         else:
             event_data['channel'] = channel
+            event_data['meta']['recipients'] = recipients
             if self.nickname in recipients:
                 event_data['source'] = 'highlight'
                 event_data['meta']['message'] = match[1].strip()
             else:
-                event['source'] = 'room'
+                event_data['source'] = 'room'
             
 
 
@@ -429,6 +432,9 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         """
         passes raw data to bot
         """
+
+        log.msg('sending raw event {0!r}'.format(raw_event),
+                logLevel=logging.DEBUG)
         self.factory.new_event(raw_event)
 
     def _bot_process_action(self, action):
