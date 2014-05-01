@@ -445,7 +445,11 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                 for dest in action.destination_rooms:
                     if dest:
                         if dest[0] == '#':
-                            self.say(dest, body)
+                            if action.source == 'highlight':
+                                msg = action.source_event.meta['nick'] + ': ' + body
+                                self.say(dest, msg)
+                            else:
+                                self.say(dest, body)
                         else:
                             self.msg(dest, body)
 

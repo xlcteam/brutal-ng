@@ -177,7 +177,6 @@ class Event(object):
                     self.event_type = 'cmd'
                     self.cmd = cmd
                     self.args = args
-                    print self.cmd, self.args
                     return True
             elif self.source_bot.nick in self.meta['recipients']:
                 try:
@@ -189,7 +188,6 @@ class Event(object):
                     self.event_type = 'cmd'
                     self.cmd = cmd
                     self.args = args
-                    print self.cmd, self.args
                     return True
 
         return False
@@ -257,6 +255,10 @@ class Action(object):
         self.time_stamp = time.time()
         self.action_version = DEFAULT_ACTION_VERSION
 
+        self.action_type = action_type
+        self.meta = meta or {}
+
+
         self.scope = None
         self.source = None
         if self.source_event != None:
@@ -264,9 +266,6 @@ class Action(object):
             self.source = self.source_event.source
 
 
-
-        self.action_type = action_type
-        self.meta = meta or {}
 
         self.log.debug('source_event {0!r}'.format(vars(self.source_event)))
 
