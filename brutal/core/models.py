@@ -95,6 +95,8 @@ class Event(object):
         self.source_room = None
         self.scope = None
 
+        self.source = None
+
         self.meta = None
         self.from_bot = None
 
@@ -126,6 +128,9 @@ class Event(object):
         self.event_type = self.raw_details.get('type')
         self.meta = self.raw_details.get('meta')
         self.from_bot = self.raw_details.get('from_bot')
+
+        self.source = self.raw_details.get('source')
+
         if self.from_bot is not True:
             self.from_bot = False
 
@@ -159,9 +164,10 @@ class Event(object):
             return False
 
         split = body.split()
+
         if len(split):
 
-            if split[0].startswith(token):
+            if split[0].startswith(token) and self.source == 'room':
                 try:
                     cmd = split[0][1:]
                     args = split[1:]
@@ -171,7 +177,21 @@ class Event(object):
                     self.event_type = 'cmd'
                     self.cmd = cmd
                     self.args = args
+                    print self.cmd, self.args
                     return True
+            elif self.source_bot.nick in self.meta['recipients']:
+                try:
+                    cmd = split[0]
+                    args = split[1:]
+                except Exception as e:
+                    self.log.exception('failed parsing cmd from {0!r}: {1!r}'.format(body, e))
+                else:
+                    self.event_type = 'cmd'
+                    self.cmd = cmd
+                    self.args = args
+                    print self.cmd, self.args
+                    return True
+
         return False
 
 
@@ -238,8 +258,12 @@ class Action(object):
         self.action_version = DEFAULT_ACTION_VERSION
 
         self.scope = None
-        if self.source_event is not None:
+        self.source = None
+        if self.source_event != None:
             self.scope = self.source_event.scope
+            self.source = self.source_event.source
+
+
 
         self.action_type = action_type
         self.meta = meta or {}

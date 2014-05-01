@@ -373,11 +373,10 @@ class SimpleIrcBotProtocol(irc.IRCClient):
             event_data['meta']['recipients'] = recipients
             if self.nickname in recipients:
                 event_data['source'] = 'highlight'
-                event_data['meta']['message'] = match[1].strip()
+                event_data['meta']['body'] = match[0][1].strip()
             else:
                 event_data['source'] = 'room'
             
-
 
         self._bot_process_event(event_data)
 
