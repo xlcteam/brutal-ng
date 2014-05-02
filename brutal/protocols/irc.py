@@ -461,7 +461,6 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         nick, _, host = user.partition('!')
         event_data = {'type': 'quit',
                       'scope': 'public',
-                      'channel': channel,
                       'meta': {
                             'nick': nick,
                             'host': host,
