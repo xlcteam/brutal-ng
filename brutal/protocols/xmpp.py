@@ -63,8 +63,11 @@ class MucBot(muc.MUCClient):
             self.log.error('groupchat recieved from None?')
             return
 
-        event_data = {'type': 'message', 'scope': 'public', 'room': room.roomJID.full(), 'meta': {'from': user.nick,
-                                                                                                  'body': message.body}}
+        event_data = {'type': 'message',
+                      'scope': 'public',
+                      'room': room.roomJID.full(),
+                      'meta': {'nick': user.nick,
+                               'body': message.body}}
 
         if user.nick == self.nick:
             event_data['from_bot'] = True
