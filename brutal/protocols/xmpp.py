@@ -10,6 +10,8 @@ from wokkel.subprotocols import XMPPHandler
 
 from brutal.protocols.core import ProtocolBackend
 
+import re
+
 XMPP_DEFAULT_PORT = 5222
 
 
@@ -18,6 +20,8 @@ class XmppBot():
 
 
 class MucBot(muc.MUCClient):
+
+    recipients_split_regex = '^((?:[\s]*[0-9A-Za-z_-~]{0,12}[\s]*:[\s]*)+)(.*)$'
 
     def __init__(self, rooms,  nick, backend):
         super(MucBot, self).__init__()
@@ -28,6 +32,8 @@ class MucBot(muc.MUCClient):
         self.raw_rooms = rooms or []
         self.room_jids = []
         self.nick = nick
+
+        self.recipients_regex = re.compile(self.recipients_split_regex)
 
         for room in self.raw_rooms:
             password = None
@@ -63,11 +69,24 @@ class MucBot(muc.MUCClient):
             self.log.error('groupchat recieved from None?')
             return
 
+        recipients = []
+        match = self.recipients_regex.findall(message.body)
+        if match != []:
+            cleaned_recipients = match[0][0].strip().split(':')[:-1]
+            recipients = [recipient.strip() for recipient in cleaned_recipients]
+
         event_data = {'type': 'message',
                       'scope': 'public',
                       'room': room.roomJID.full(),
                       'meta': {'nick': user.nick,
-                               'body': message.body}}
+                               'body': message.body,
+                               'recipients': recipients}}
+
+        if self.nick in recipients:
+            event_data['source'] = 'highlight'
+            event_data['meta']['body'] = match[0][1].strip()
+        else:
+            event_data['source'] = 'room'
 
         if user.nick == self.nick:
             event_data['from_bot'] = True
