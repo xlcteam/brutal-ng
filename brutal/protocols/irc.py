@@ -459,16 +459,18 @@ class SimpleIrcBotProtocol(irc.IRCClient):
     def userQuit(self, user, quitMessage):
         log.msg('userQuit - user: {0!r}, quit msg: {1!r}'.format(user, quitMessage), logLevel=logging.DEBUG)
         nick, _, host = user.partition('!')
-        event_data = {'type': 'quit',
-                      'scope': 'public',
-                      'meta': {
-                            'nick': nick,
-                            'host': host,
-                            'from': user,
-                            'message': quitMessage
-                          }}
+        for channel in self.channels:
+            event_data = {'type': 'quit',
+                          'scope': 'public',
+                          'channel': channel,
+                          'meta': {
+                                'nick': nick,
+                                'host': host,
+                                'from': user,
+                                'message': quitMessage
+                              }}
 
-        self._bot_process_event(event_data)
+            self._bot_process_event(event_data)
 
 
     def userKicked(self, kickee, channel, kicker, message):
