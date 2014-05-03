@@ -493,17 +493,18 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         log.msg('topicUpdated - user: {0!r}, channel: {1!r}, topic: {2!r}'.format(user, channel, newTopic),
                 logLevel=logging.DEBUG)
         nick, _, host = user.partition('!')
-        event_data = {'type': 'topic',
-                      'scope': 'public',
-                      'channel': channel,
-                      'meta': {
-                            'nick': nick,
-                            'host': host,
-                            'from': user,
-                            'topic':newTopic
-                          }}
+        for channel in self.channels:
+            event_data = {'type': 'topic',
+                          'scope': 'public',
+                          'channel': channel,
+                          'meta': {
+                                'nick': nick,
+                                'host': host,
+                                'from': user,
+                                'topic':newTopic
+                              }}
 
-        self._bot_process_event(event_data)
+            self._bot_process_event(event_data)
 
 
     def userRenamed(self, oldname, newname):
