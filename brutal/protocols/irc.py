@@ -493,35 +493,35 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         log.msg('topicUpdated - user: {0!r}, channel: {1!r}, topic: {2!r}'.format(user, channel, newTopic),
                 logLevel=logging.DEBUG)
         nick, _, host = user.partition('!')
-        for channel in self.channels:
-            event_data = {'type': 'topic',
-                          'scope': 'public',
-                          'channel': channel,
-                          'meta': {
-                                'nick': nick,
-                                'host': host,
-                                'from': user,
-                                'topic':newTopic
-                              }}
-
-            self._bot_process_event(event_data)
-
-
-    def userRenamed(self, oldname, newname):
-        log.msg('userRenamed - old: {0!r}, new: {1!r}'.format(oldname, newname), logLevel=logging.DEBUG)
-
-        nick, _, host = oldname.partition('!')
-        event_data = {'type': 'rename',
+        event_data = {'type': 'topic',
                       'scope': 'public',
                       'channel': channel,
                       'meta': {
                             'nick': nick,
                             'host': host,
                             'from': user,
-                            'new_name': newname
+                            'topic':newTopic
                           }}
 
         self._bot_process_event(event_data)
+
+
+    def userRenamed(self, oldname, newname):
+        log.msg('userRenamed - old: {0!r}, new: {1!r}'.format(oldname, newname), logLevel=logging.DEBUG)
+
+        nick, _, host = oldname.partition('!')
+        for channel in self.channels:
+            event_data = {'type': 'rename',
+                          'scope': 'public',
+                          'channel': channel,
+                          'meta': {
+                                'nick': nick,
+                                'host': host,
+                                'from': user,
+                                'new_name': newname
+                              }}
+
+            self._bot_process_event(event_data)
 
 
 
