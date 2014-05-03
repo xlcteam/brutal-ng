@@ -127,6 +127,39 @@ class ClientKeepalive(XMPPHandler):
         if self.lc:
             self.lc.stop()
 
+class PrivateChatBot(xmppim.MessageProtocol):
+
+    def __init__(self, backend):
+        super(PrivateChatBot, self).__init__()
+        self.log = logging.getLogger('{0}.{1}'.format(self.__class__.__module__, self.__class__.__name__))
+        self.backend = backend
+
+    def connectionMade(self):
+
+        # send initial presence
+        self.send(xmppim.AvailablePresence())
+
+    def connectionLost(self, reason):
+        pass
+
+    def onMessage(self, message):
+        if message is not None and hasattr(message, "body") and message.body != None:
+            self.log.debug('XMPP Private message: {0!r} - {1} - {2} - {3}'.format(message, str(message.body), message["from"], message["type"]))
+
+            if message["type"] == "chat":
+                nick, other = message["from"].split('@')
+                host = other.split('/')[0]
+                event_data = {
+                        'type': 'message',
+                        'scope': 'private',
+                        'source': 'query',
+                        'meta': {'from': message["from"],
+                                 'nick': message["from"],
+                                 'body': str(message.body).strip(),
+                                 'recipients': [self.backend.nick]}}
+
+                self.backend.handle_event(event_data)
+
 
 class XmppBackend(ProtocolBackend):
     protocol_name = 'xmpp'
@@ -184,6 +217,9 @@ class XmppBackend(ProtocolBackend):
         self.muc_handler = MucBot(self.rooms, self.room_nick, backend=self)
         self.muc_handler.setHandlerParent(self.client)
 
+        self.privatechat_handler = PrivateChatBot(backend=self)
+        self.privatechat_handler.setHandlerParent(self.client)
+
         self.presence = xmppim.PresenceClientProtocol()
         self.presence.setHandlerParent(self.client)
         self.presence.available()
@@ -192,7 +228,7 @@ class XmppBackend(ProtocolBackend):
         self.keepalive.setHandlerParent(self.client)
 
     def handle_action(self, action):
-        #self.log.debug(': {0!r}'.format(action))
+        self.log.debug('XMPP ACTION : {0!r}'.format(action))
 
         if action.action_type == 'message':
             body = action.meta.get('body')
@@ -200,7 +236,12 @@ class XmppBackend(ProtocolBackend):
                 if action.destination_rooms:
                     for room in action.destination_rooms:
                         if action.scope == 'public':
-                            # TODO: replace this with an actual room lookup of known rooms
                             room_jid = jid.internJID(room)
                             message = muc.GroupChat(recipient=room_jid, body=body)
                             self.client.send(message.toElement())
+                        if action.scope == 'private':
+                            if room != None:
+                                msg = xmppim.Message(recipient=jid.internJID(room),
+                                                     sender=self.bot_jid,
+                                                     body=body)
+                                self.client.send(msg.toElement())
