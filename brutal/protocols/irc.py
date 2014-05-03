@@ -517,7 +517,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                           'meta': {
                                 'nick': nick,
                                 'host': host,
-                                'from': user,
+                                'from': oldname,
                                 'new_name': newname
                               }}
 
