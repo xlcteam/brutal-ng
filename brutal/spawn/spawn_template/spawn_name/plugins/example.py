@@ -38,14 +38,12 @@ def test_event_parser(event):
 
 
 class TestPlugin(BotPlugin):
-    def __init__(self, bot, config, *args, **kwargs):
-        self.bot = bot
-        self.config = config
-
-        self.log.info('Loaded TestPlugin with config {0!r}'.format(self.config))
 
     def setup(self, *args, **kwargs):
         self.log.debug('SETUP CALLED')
+
+        self.log.info('Loaded TestPlugin with config {0!r}'.format(self.config))
+
         self.counter = 0
         self.loop_task(5, self.test_loop, now=False)
         self.delay_task(10, self.future_task)

@@ -290,15 +290,17 @@ class PluginManager(object):
                     try:
                         instance = class_object(bot=self.bot,
                                 config=self.bot.enabled_plugins[plugin_module.__name__])
-                    except Exception:
-                        self.log.exception('failed to load plugin {0!r} from {1!r}'.format(class_name,
-                                                                                           plugin_module.__name__))
+                    except Exception, e:
+                        self.log.exception('failed to load plugin {0!r} from {1!r} due to (2!r)'.format(class_name,
+                                                                                           plugin_module.__name__,
+                                                                                           e))
                     else:
                         try:
                             instance.setup()
-                        except Exception:
-                            self.log.exception('failed to setup plugin {0!r} from {1!r}'.format(class_name,
-                                                                                                plugin_module.__name__))
+                        except Exception, e:
+                            self.log.exception('failed to setup plugin {0!r} from {1!r} due to {2!r}'.format(class_name,
+                                                                                                plugin_module.__name__,
+                                                                                                e))
                         else:
                             self.plugin_instances[instance] = plugin_module.__name__
 
@@ -460,7 +462,7 @@ class BotPlugin(object):
     built_in = False  # is this a packaged plugin
 
     #TODO: make a 'task' decorator...
-    def __init__(self, bot=None):
+    def __init__(self, bot=None, config=None):
         """
         don't touch me. plz?
 
@@ -470,6 +472,7 @@ class BotPlugin(object):
             that way they can do whatever they want in init
         """
         self.bot = bot
+        self.config = config
 
         self.log = logging.getLogger('{0}.{1}'.format(self.__module__, self.__class__.__name__))
 
