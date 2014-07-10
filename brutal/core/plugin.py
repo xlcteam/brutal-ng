@@ -288,7 +288,8 @@ class PluginManager(object):
             for class_name, class_object in inspect.getmembers(plugin_module, inspect.isclass):
                 if issubclass(class_object, BotPlugin):
                     try:
-                        instance = class_object(bot=self.bot)
+                        instance = class_object(bot=self.bot,
+                                config=self.bot.enabled_plugins[plugin_module.__name__])
                     except Exception:
                         self.log.exception('failed to load plugin {0!r} from {1!r}'.format(class_name,
                                                                                            plugin_module.__name__))
@@ -297,7 +298,7 @@ class PluginManager(object):
                             instance.setup()
                         except Exception:
                             self.log.exception('failed to setup plugin {0!r} from {1!r}'.format(class_name,
-                                                                                                plugin_module.__name))
+                                                                                                plugin_module.__name__))
                         else:
                             self.plugin_instances[instance] = plugin_module.__name__
 
