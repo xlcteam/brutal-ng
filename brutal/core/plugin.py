@@ -214,33 +214,41 @@ class Parser(object):
             self.log.error('invalid event passed to parser')
             return
 
-        if event.event_type == self.event_type:
-            if event.event_type == 'cmd':
-                if event.cmd is not None and self.regex is not None:
-                    try:
-                        match = self.regex.match(event.cmd)
-                    except Exception:
-                        self.log.exception('invalid regex match attempt on {0!r}, {1!r}'.format(event.cmd, self))
-                    else:
-                        return match
-                else:
-                    self.log.error('invalid event passed in')
-            elif event.event_type == 'message' and isinstance(event.meta, dict) and 'body' in event.meta:
-                body = event.meta['body']
-                #TODO: HERE, make this smarter.
-                if self.regex is not None and type(body) in (str, unicode):
-                    try:
-                        match = self.regex.match(body)
-                    except Exception:
-                        self.log.exception('invalid regex match attempt on {0!r}, {1!r}'.format(body, self))
-                    else:
-                        return match
-                else:
-                    self.log.error('message contains no body to regex match against')
-            else:
-                return True
-        else:
+        if event.event_type != self.event_type:
             self.log.debug('event_parser not meant for this event type')
+            return
+
+        if event.event_type == 'cmd':
+            if event.cmd is None or self.regex is None:
+                self.log.error('invalid event passed in')
+                return
+
+            return self.match_with_regex(event.cmd)
+
+        elif event.event_type == 'message' and \
+                isinstance(event.meta, dict) and  \
+                'body' in event.meta:
+
+            body = event.meta['body']
+            # TODO: HERE, make this smarter.
+            if self.regex is None or not (type(body) in (str, unicode)):
+                self.log.error('message contains no body to regex match against')
+                return
+
+            return self.match_with_regex(body)
+
+        else:
+            return True
+
+    def match_with_regex(self, text):
+        """Decides whether the text matches the regexp of the function"""
+        try:
+            match = self.regex.match(text)
+        except Exception:
+            self.log.exception('invalid regex match attempt on {0!r},'
+                               '{1!r}'.format(text, self))
+        else:
+            return match
 
     @classmethod
     def build_parser(cls, func, source):
