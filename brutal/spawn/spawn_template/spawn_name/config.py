@@ -1,6 +1,6 @@
 INSTALLED_PLUGINS = (
     'brutal.plugins.basic',
-    #'brutal.plugins.logging',
+    # 'brutal.plugins.logging',
 )
 
 BOTS = [
@@ -31,7 +31,13 @@ BOTS = [
             # }
         ],
         'enabled_plugins': {
-            #'plugin_one': {},
+            # 'plugin_one': {},
+            # '{{ spawn_name }}.plugins.example': {
+            #   'id': 1,
+            #   'name': 'John',
+            #   'surename': 'Doe',
+            #   'nick': 'jdoe'
+            # }
         },  # if this isn't set, load all
         'plugin_settings': {}
     },
