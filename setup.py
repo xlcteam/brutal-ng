@@ -5,16 +5,17 @@ import brutal
 from setuptools import setup, find_packages
 
 setup(
-    name='brutal',
+    name='brutal-ng',
     version=brutal.__version__,
 
-    description='a multi-network asynchronous chat bot framework using twisted.',
+    description='The new generation of brutal, a multi-network asynchronous' +
+                'chat bot framework using twisted',
     long_description=open('README.rst').read(),
 
-    author='Corey Bertram',
-    author_email='corey@qr7.com',
+    author='XLC Team',
+    author_email='contact@mail.xlc-team.info',
 
-    url='https://github.com/Netflix/brutal',
+    url='https://github.com/xlcteam/brutal-ng',
 
     scripts=['brutal/bin/brutal-overlord.py', ],
 
