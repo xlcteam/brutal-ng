@@ -25,7 +25,7 @@ class Bot(object):
         self.command_token = command_token
         self.log = logging.getLogger('{0}.{1}.{2}'.format(self.__class__.__module__, self.__class__.__name__,
                                                           self.nick))
-        self.log.info('starting bot')
+        self.log.info('starting bot {0}'.format(nick))
 
         #bot manager instance
         self.bot_manager = None
@@ -44,15 +44,18 @@ class Bot(object):
 
         # build connections
         # TODO: create connection manager
-        self.connection_manager = ConnectionManager(config=connections, bot=self)
-        self.log.debug('connections on {0!r}: {1!r}'.format(self.nick, self.connection_manager))
+        self.connection_manager = ConnectionManager(config=connections,
+                                                    bot=self)
+        self.log.debug('connections on {0!r}: {1!r}'.format(self.nick,
+                                                            self.connection_manager))
 
         # should have a 'ready' state that we should check before starting?
         self.state = OFF
         self.party_line = None
 
     def __repr__(self):
-        return '<{0}: {1!r} ({2!s})>'.format(self.__class__.__name__, self.nick, self.id)
+        return '<{0}: {1!r} ({2!s})>'.format(self.__class__.__name__,
+                                             self.nick, self.id)
 
     def __str__(self):
         return repr(self)
