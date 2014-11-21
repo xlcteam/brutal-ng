@@ -552,6 +552,9 @@ class BotPlugin(object):
             t.start(loop_time, now)
             self._looping_tasks.append(t)
 
+    def start_pooler(self, loop_time, func, *args, **kwargs):
+        return self.loop_task(loop_time, func, *args)
+
     # Actions
 
     def _queue_action(self, action, event=None):
