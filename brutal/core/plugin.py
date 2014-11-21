@@ -544,6 +544,10 @@ class BotPlugin(object):
             self._delayed_tasks.append(d)
 
     def loop_task(self, loop_time, func, *args, **kwargs):
+        """Starts looping a function ``func`` every ``loop_time`` seconds.
+
+        Note: If the ``now`` parameter is present and set to True the function
+        is called right after declaration too."""
         if inspect.isfunction(func) or inspect.ismethod(func):
             self.log.debug('scheduling task {0!r} to run every {1} seconds'.format(func.__name__, loop_time))
             now = kwargs.pop('now', True)
@@ -553,6 +557,8 @@ class BotPlugin(object):
             self._looping_tasks.append(t)
 
     def start_pooler(self, loop_time, func, *args, **kwargs):
+        """Start to pool a the function ``func``."""
+
         return self.loop_task(loop_time, func, *args)
 
     # Actions
