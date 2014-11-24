@@ -28,6 +28,7 @@ setup(
         'Twisted >= 12.1.0',
         'wokkel == 0.7.1',
         'pyOpenSSL == 0.13',
+        'service-identity == 14.0.0',
     ],
 
     keywords='twisted',
