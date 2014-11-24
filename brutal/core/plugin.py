@@ -442,7 +442,7 @@ class PluginManager(object):
             self.log.debug('RESPONSE: {0!r}'.format(response))
             if isinstance(response, Action):
                 return response
-                #self.bot.action_queue.put(response)
+                # self.bot.action_queue.put(response)
             else:
                 # a = self.build_action(response, event)
                 return self.build_action(response, event)
@@ -451,13 +451,22 @@ class PluginManager(object):
                 #     self.bot.action_queue.put(a)
 
     def build_action(self, action_data, event=None):
-        if type(action_data) in (str, unicode):
+        if not type(action_data) in (str, unicode):
             try:
-                a = Action(source_bot=self.bot, source_event=event).msg(action_data)
+                action_data = str(action_data)
             except Exception as e:
-                self.log.exception('failed to build action from {0!r}, for {1!r}: {2!r}'.format(action_data, event, e))
-            else:
-                return a
+                self.log.exception('Failed to convert action_data ({0!r})'
+                                   'to string'.format(action_data))
+        try:
+            action = Action(source_bot=self.bot,
+                            source_event=event).msg(action_data)
+        except Exception as e:
+            self.log.exception('failed to build action from {0!r},'
+                               ' for {1!r}: {2!r}'.format(action_data,
+                                                          event,
+                                                          e))
+        else:
+            return action
 
 
 #TODO: completely changed, need to rework this...
