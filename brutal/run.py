@@ -12,9 +12,16 @@ def main(config):
     # TODO: move logging to BotManager, make configurable
     filename = config.LOG_FILE
     level = config.LOG_LEVEL
-    fmt = '%(asctime)-21s %(levelname)s %(name)s (%(funcName)-s) %(process)d:%(thread)d - %(message)s'
+    fmt = config.LOG_FORMAT
 
-    logging.basicConfig(level=level, format=fmt, filename=filename)
+    # reset formatters
+    root = logging.getLogger()
+    if root.handlers:
+        for handler in root.handlers:
+            root.removeHandler(handler)
+
+    logging.basicConfig(level=level, format=fmt,
+                        filename=filename)
 
     observer = log.PythonLoggingObserver()
     observer.start()
