@@ -8,6 +8,9 @@ from twisted.python.threadable import isInIOThread
 from brutal.core.models import Action, Event
 from brutal.conf import config
 
+import shelve
+import os
+
 SRE_MATCH_TYPE = type(re.match("", ""))
 
 
@@ -497,6 +500,9 @@ class BotPlugin(object):
         self._delayed_tasks = []  # tasks scheduled to run in the future
         self._looping_tasks = []
 
+        # shelves for persistent data storage.
+        self.shelves = {}
+
     # Tasks
 
     def _clear_called_tasks(self):
@@ -565,10 +571,18 @@ class BotPlugin(object):
             t.start(loop_time, now)
             self._looping_tasks.append(t)
 
-    def start_pooler(self, loop_time, func, *args, **kwargs):
+    def start_poller(self, loop_time, func, *args, **kwargs):
         """Start to pool a the function ``func``."""
 
         return self.loop_task(loop_time, func, *args)
+
+    def open_storage(self, name):
+        if name not in self.shelves:
+            path = config.DATA_DIR + os.sep + \
+                self.bot.nick + '.' + name + config.STORAGE_SUFFIX
+            self.shelves[name] = shelve.DbfilenameShelf(path, protocol=2)
+        return self.shelves[name]
+
 
     # Actions
 

@@ -13,3 +13,5 @@ LOG_FORMAT = LOG_FORMAT.format('asctime',
                                'message')
 
 INSTALLED_PLUGINS = ()
+DATA_DIR = './data/'
+STORAGE_SUFFIX = '.db'

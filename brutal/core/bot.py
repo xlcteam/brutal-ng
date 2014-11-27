@@ -14,7 +14,8 @@ from brutal.core.constants import *
 class Bot(object):
     def __init__(self, nick, connections, command_token='!', *args, **kwargs):
         """
-        acts as a connection manager, middle man for incoming events, and processor of outgoing actions.
+        acts as a connection manager, middle man for incoming events, and
+        processor of outgoing actions.
         """
         #TODO: maybe support a custom internal key to keep track of bots, not just by 'name'...
         #TODO: if we do it by name, make sure we don't have name dupes, even between networks :-/
