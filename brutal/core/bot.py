@@ -10,7 +10,6 @@ from brutal.core.models import Event, Action
 
 from brutal.core.constants import *
 
-
 class Bot(object):
     def __init__(self, nick, connections, command_token='!', *args, **kwargs):
         """
@@ -92,6 +91,10 @@ class Bot(object):
         NOTE: for now send everywhere...
         """
         pass
+
+    def shutdown(self, *args, **kwargs):
+        """A method that is called on bot shutdown"""
+        self.plugin_manager.shutdown(*args, **kwargs)
 
     # EVENT QUEUE
     # default event consumer queue.
@@ -249,3 +252,9 @@ class BotManager(object):
         loop.start(30.0)
 
         reactor.run()
+
+    def shutdown(self, *args, **kwargs):
+        """A method that is called on shutdown"""
+        self.log.info("Shutting down ...")
+        for name, bot in self.bots.iteritems():
+            bot['bot'].shutdown(*args, **kwargs)

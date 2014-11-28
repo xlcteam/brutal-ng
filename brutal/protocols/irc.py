@@ -626,6 +626,8 @@ class IrcBackend(ProtocolBackend):
         log.msg('connecting to {0}:{1} with nick {2!r}'.format(self.server, self.port, self.nick),
                 logLevel=logging.DEBUG)
         reactor.connectTCP(self.server, self.port, self.client)
+        reactor.addSystemEventTrigger('before', 'shutdown', self.bot.shutdown)
+
 
     def handle_action(self, action):
         self.client.handle_action(action)

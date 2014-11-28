@@ -276,6 +276,11 @@ class PluginManager(object):
     # def start(self):
     #     installed_plugins = getattr(config, PLUGINS)
 
+    def shutdown(self, *args, **kwargs):
+        """A method that is called on bot shutdown."""
+        for plugin, _ in self.plugin_instances.iteritems():
+            plugin.close_storages()
+
     def start(self, enabled_plugins=None):
         if enabled_plugins is not None and not type(enabled_plugins) in (list, dict):
             self.log.error('improper plugin config, list or dictionary required')
@@ -577,12 +582,26 @@ class BotPlugin(object):
         return self.loop_task(loop_time, func, *args)
 
     def open_storage(self, name):
+        """Opens persistent storage with a given name."""
         if name not in self.shelves:
             path = config.DATA_DIR + os.sep + \
                 self.bot.nick + '.' + name + config.STORAGE_SUFFIX
             self.shelves[name] = shelve.DbfilenameShelf(path, protocol=2)
         return self.shelves[name]
 
+    def close_storage(self, name):
+        """Closes persistent storage with a given name that is already open."""
+        if name in self.shelves:
+            self.shelves[name].close()
+        else:
+            msg = "No storage called '{0}' found!".format(name)
+            self.log.error(msg)
+            raise ValueError(msg)
+
+    def close_storages(self):
+        """Closes all open persistent storages."""
+        for _, shelf in self.shelves.iteritems():
+            shelf.close()
 
     # Actions
 
