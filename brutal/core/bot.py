@@ -96,6 +96,10 @@ class Bot(object):
         """A method that is called on bot shutdown"""
         self.plugin_manager.shutdown(*args, **kwargs)
 
+    def update(self):
+        """A method that is called on update from the bot manager."""
+        self.plugin_manager.update()
+
     # EVENT QUEUE
     # default event consumer queue.
     def _consume_events(self, queue):
@@ -227,8 +231,11 @@ class BotManager(object):
             self.log.warning('no bots found in configuration')
 
     def update(self):
-        self.log.debug('manager loop called')
-        pass
+        """A bot manager's update method that runs ever 30 seconds."""
+        self.log.debug('update loop called')
+
+        for name, bot in self.bots.iteritems():
+            bot['bot'].update()
 
     def create_bot(self, *args, **kwargs):
         bot = Bot(*args, **kwargs)

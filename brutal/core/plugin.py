@@ -281,6 +281,11 @@ class PluginManager(object):
         for plugin, _ in self.plugin_instances.iteritems():
             plugin.close_storages()
 
+    def update(self):
+        """The metod which is executed every 30 seconds, gets propagated from
+        BotManager."""
+        pass
+
     def start(self, enabled_plugins=None):
         if enabled_plugins is not None and not type(enabled_plugins) in (list, dict):
             self.log.error('improper plugin config, list or dictionary required')
