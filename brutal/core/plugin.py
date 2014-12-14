@@ -270,6 +270,8 @@ class PluginManager(object):
 
         self.status = None
 
+        self.cmd_docs = {}
+
         # possibly track which bot this PM is assigned to?
         # should track which module it came from for easy unloading
 
@@ -349,11 +351,13 @@ class PluginManager(object):
         self.log.debug('loading plugins from module {0!r}'.format(module_name))
 
         # step through all functions in module
-        for func_name, func in inspect.getmembers(plugin_module, inspect.isfunction):
+        for func_name, func in inspect.getmembers(plugin_module,
+                                                  inspect.isfunction):
             try:
                 parser = Parser.build_parser(func=func, source=plugin_module)
             except Exception:
-                self.log.exception('failed to build parser from {0} ({1})'.format(func_name, module_name))
+                self.log.exception('failed to build parser from {0} ({1})'
+                                   .format(func_name, module_name))
                 continue
             else:
                 if parser is not None:
@@ -361,6 +365,10 @@ class PluginManager(object):
                         self.event_parsers[parser.event_type].append(parser)
                     else:
                         self.event_parsers[parser.event_type] = [parser, ]
+
+                    # let's recall the documentation (docstring) of a function
+                    # so that we can get a quick help.
+                    self.cmd_docs[func_name] = func.__doc__
 
     def _register_plugin_class_methods(self, plugin_instance):
         #TODO: should wrap this...
