@@ -14,9 +14,10 @@ def help(event):
         return doc.split('\n')[0]
 
     plugin_manager = event.source_bot.plugin_manager
+    prendex = 'Available commands: '
 
     if len(event.args) < 1:
-        return ', '.join(plugin_manager.cmd_docs.keys())
+        return prendex + ', '.join(plugin_manager.cmd_docs.keys())
 
     if len(event.args) > 1:
         return 'no...'

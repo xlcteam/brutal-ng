@@ -40,19 +40,24 @@ def cmd(func=None, command=None, thread=False):
         func.__brutal_event = True
         func.__brutal_event_type = 'cmd'
         func.__brutal_trigger = None
+        func.__brutal_command = None
         if command is not None and type(command) in (str, unicode):
-
             try:
                 func.__brutal_trigger = re.compile(command)
+                func.__brutal_command = command
             except Exception:
-                logging.exception('failed to build regex for {0!r} from func {1!r}'.format(command, func.__name__))
+                logging.exception('failed to build regex for {0!r}'
+                                  ' from func {1!r}'.format(command,
+                                                            func.__name__))
 
         if func.__brutal_trigger is None:
             try:
                 raw_name = r'^{0}$'.format(func.__name__)
                 func.__brutal_trigger = re.compile(raw_name)
+                func.__brutal_command = func.__name__
             except Exception:
-                logging.exception('failing to build command from {0!r}'.format(func.__name__))
+                logging.exception('failing to build command'
+                                  ' from {0!r}'.format(func.__name__))
                 func.__brutal_event = False
 
         if thread is True:
@@ -71,7 +76,8 @@ def cmd(func=None, command=None, thread=False):
 
 # def parser(func=None, thread=True):
 #     """
-#     this decorator makes the function look at _all_ lines and attempt to parse them
+#     this decorator makes the function look at _all_ lines and attempt to
+#     parse them
 #     ex: logging
 #     """
 #     def decorator(func):
@@ -94,7 +100,8 @@ def cmd(func=None, command=None, thread=False):
 # make event_type required?
 def event(func=None, event_type=None, thread=False):
     """
-    this decorator is used to register an event parser that the bot will respond to.
+    this decorator is used to register an event parser that the bot will
+    respond to.
     """
     def decorator(func):
         func.__brutal_event = True
@@ -115,7 +122,7 @@ def event(func=None, event_type=None, thread=False):
         return decorator(func)
 
 
-#TODO: maybe swap this to functools.partial
+# TODO: maybe swap this to functools.partial
 def match(func=None, regex=None, thread=False):
     """
     this decorator is used to create a command the bot will respond to.
@@ -128,14 +135,17 @@ def match(func=None, regex=None, thread=False):
             try:
                 func.__brutal_trigger = re.compile(regex)
             except Exception:
-                logging.exception('failed to build regex for {0!r} from func {1!r}'.format(regex, func.__name__))
+                logging.exception('failed to build regex for {0!r}'
+                                  ' from func {1!r}'.format(regex,
+                                                            func.__name__))
 
         if func.__brutal_trigger is None:
             try:
                 raw_name = r'^{0}$'.format(func.__name__)
                 func.__brutal_trigger = re.compile(raw_name)
             except Exception:
-                logging.exception('failing to build match from {0!r}'.format(func.__name__))
+                logging.exception('failing to build match from {0!r}'
+                                  .format(func.__name__))
                 func.__brutal_event = False
 
         if thread is True:
@@ -152,14 +162,15 @@ def match(func=None, regex=None, thread=False):
         return decorator(func)
 
 
-#TODO: possibly abstract like this?
+# TODO: possibly abstract like this?
 class Parser(object):
     def __init__(self, func, source=None):
         self.healthy = False
 
         self.source = source
         if inspect.isclass(source) is True:
-            self.source_name = '{0}.{1}'.format(self.source.__module__, self.source.__name__)
+            self.source_name = '{0}.{1}'.format(self.source.__module__,
+                                                self.source.__name__)
         elif inspect.ismodule(source) is True:
             self.source_name = self.source.__name__
         else:
@@ -180,21 +191,27 @@ class Parser(object):
         self.regex = None
         self.threaded = getattr(self.func, '__brutal_threaded', False)
         self.parse_bot_events = False
+        self.command = getattr(self.func, '__brutal_command', None)
 
-        self.log = logging.getLogger('{0}.{1}'.format(self.__class__.__module__, self.__class__.__name__))
+        cls = self.__class__
+
+        self.log = logging.getLogger('{0}.{1}'.format(cls.__module__,
+                                                      cls.__name__))
 
         # future use:
-        #self.stop_parsing = False  # if true, wont run any more parsers after this.
-        #self.parent = None
-        #elf.children = None
+        # if true, wont run any more parsers after this.
+        # self.stop_parsing = False
+        # self.parent = None
+        # self.children = None
 
-        #TODO: check if healthy
+        # TODO: check if healthy
         self.event_type = getattr(self.func, '__brutal_event_type', None)
         if self.event_type in ['cmd', 'message']:
             self.regex = getattr(self.func, '__brutal_trigger', None)
 
             if self.regex is None:
-                self.log.error('failed to get compiled regex from func for {0}'.format(self))
+                self.log.error('failed to get compiled regex '
+                               'from func for {0}'.format(self))
                 self.healthy = False
             else:
                 # should probably check that its a compiled re
@@ -202,12 +219,15 @@ class Parser(object):
         else:
             self.healthy = True
 
-        self.log.debug('built parser - event_type: {0!r}, source: {1!r}, func: {2!r}'.format(self.event_type,
-                                                                                             self.source_name,
-                                                                                             self.func_name))
+        self.log.debug('built parser - event_type: {0!r}, '
+                       ' source: {1!r}, func: {2!r}'.format(self.event_type,
+                                                            self.source_name,
+                                                            self.func_name))
 
     def __repr__(self):
-        return '<{0} {1}:{2}>'.format(self.__class__.__name__, self.source_name, self.func_name)
+        return '<{0} {1}:{2}>'.format(self.__class__.__name__,
+                                      self.source_name,
+                                      self.func_name)
 
     def __str__(self):
         return repr(self)
@@ -235,7 +255,8 @@ class Parser(object):
             body = event.meta['body']
             # TODO: HERE, make this smarter.
             if self.regex is None or not (type(body) in (str, unicode)):
-                self.log.error('message contains no body to regex match against')
+                self.log.error('message contains no body for the regex'
+                               ' to match against')
                 return
 
             return self.match_with_regex(body)
@@ -261,7 +282,9 @@ class Parser(object):
 
 class PluginManager(object):
     def __init__(self, bot):
-        self.log = logging.getLogger('{0}.{1}'.format(self.__class__.__module__, self.__class__.__name__))
+        cls = self.__class__
+        self.log = logging.getLogger('{0}.{1}'.format(cls.__module__,
+                                                      cls.__name__))
         self.bot = bot
         self.event_parsers = {None: [], }
 
@@ -289,8 +312,10 @@ class PluginManager(object):
         pass
 
     def start(self, enabled_plugins=None):
-        if enabled_plugins is not None and not type(enabled_plugins) in (list, dict):
-            self.log.error('improper plugin config, list or dictionary required')
+        if enabled_plugins is not None \
+           and not type(enabled_plugins) in (list, dict):
+            self.log.error('improper plugin config, '
+                           'list or dictionary required')
             return
 
         installed_plugins = getattr(config, 'PLUGINS')
@@ -299,7 +324,8 @@ class PluginManager(object):
             self.log.error('error getting INSTALLED_PLUGINS')
             return
 
-        # find enabled plugin modules and instantiate classes of every BotPlugin within modules
+        # find enabled plugin modules and instantiate classes
+        # of every BotPlugin within modules
         for plugin_module in installed_plugins:
             if enabled_plugins is not None:
                 if plugin_module.__name__ not in enabled_plugins:
@@ -308,24 +334,32 @@ class PluginManager(object):
             self.plugin_modules[plugin_module] = plugin_module.__name__
 
             # get classes
-            for class_name, class_object in inspect.getmembers(plugin_module, inspect.isclass):
+            plugin_module_classes = inspect.getmembers(plugin_module,
+                                                       inspect.isclass)
+            for class_name, class_object in plugin_module_classes:
                 if issubclass(class_object, BotPlugin):
                     try:
+                        cfg = self.bot.enabled_plugins[plugin_module.__name__]
                         instance = class_object(bot=self.bot,
-                                config=self.bot.enabled_plugins[plugin_module.__name__])
+                                                config=cfg)
                     except Exception, e:
-                        self.log.exception('failed to load plugin {0!r} from {1!r} due to (2!r)'.format(class_name,
-                                                                                           plugin_module.__name__,
-                                                                                           e))
+                        self.log.exception('failed to load plugin {0!r}'
+                                           ' from {1!r} due to (2!r)'
+                                           .format(class_name,
+                                                   plugin_module.__name__,
+                                                   e))
                     else:
                         try:
                             instance.setup()
                         except Exception, e:
-                            self.log.exception('failed to setup plugin {0!r} from {1!r} due to {2!r}'.format(class_name,
-                                                                                                plugin_module.__name__,
-                                                                                                e))
+                            self.log.exception('failed to setup plugin {0!r}'
+                                               ' from {1!r} due to {2!r}'
+                                               .format(class_name,
+                                                       plugin_module.__name__,
+                                                       e))
                         else:
-                            self.plugin_instances[instance] = plugin_module.__name__
+                            name = plugin_module.__name__
+                            self.plugin_instances[instance] = name
 
         self._register_plugins(self.plugin_modules, self.plugin_instances)
 
@@ -343,7 +377,7 @@ class PluginManager(object):
             self._register_plugin_class_methods(plugin_instance)
 
     def remove_plugin(self, plugin_module):
-        #TODO: fill out
+        # TODO: fill out
         pass
 
     def _register_plugin_functions(self, plugin_module):
@@ -368,18 +402,24 @@ class PluginManager(object):
 
                     # let's recall the documentation (docstring) of a function
                     # so that we can get a quick help.
-                    self.cmd_docs[func_name] = func.__doc__
+                    if parser.event_type == 'cmd' and\
+                       parser.command is not None:
+                        self.cmd_docs[parser.command] = func.__doc__
 
     def _register_plugin_class_methods(self, plugin_instance):
-        #TODO: should wrap this...
+        # TODO: should wrap this...
         class_name = plugin_instance.__class__.__name__
-        self.log.debug('loading plugins from instance of {0!r}'.format(class_name))
+        self.log.debug('loading plugins'
+                       ' from instance of {0!r}'.format(class_name))
 
-        for func_name, func in inspect.getmembers(plugin_instance, inspect.ismethod):
+        plugin_methods = inspect.getmembers(plugin_instance, inspect.ismethod)
+        for func_name, func in plugin_methods:
             try:
                 parser = Parser.build_parser(func=func, source=plugin_instance)
             except Exception:
-                self.log.exception('failed to build parser from {0} ({1})'.format(func_name, class_name))
+                self.log.exception('failed to build parser '
+                                   'from {0} ({1})'.format(func_name,
+                                                           class_name))
                 continue
             else:
                 if parser is not None:
@@ -401,17 +441,21 @@ class PluginManager(object):
 
         if run is True:
             if event_parser.threaded is True:
-                self.log.debug('executing event_parser {0!r} in thread'.format(event_parser))
-                response = yield threads.deferToThread(event_parser.func, event, *args)
+                self.log.debug('executing event_parser {0!r} '
+                               'in thread'.format(event_parser))
+                response = yield threads.deferToThread(event_parser.func,
+                                                       event,
+                                                       *args)
             else:
-                self.log.debug('executing event_parser {0!r}'.format(event_parser))
-                #try:
+                self.log.debug('executing'
+                               ' event_parser {0!r}'.format(event_parser))
+                # try:
                 response = yield event_parser.func(event, *args)
 
         defer.returnValue(response)
 
     def process_event(self, event):
-        #TODO: this needs some love
+        # TODO: this needs some love
 
         # this will keep track of all the responses we get
         responses = []
@@ -424,19 +468,26 @@ class PluginManager(object):
         self.log.debug('processing {0!r}'.format(event))
 
         # run only processors of this event_type
-        if event.event_type is not None and event.event_type in self.event_parsers:
-            self.log.debug('detected event_type {0!r}'.format(event.event_type))
+        if event.event_type is not None \
+           and event.event_type in self.event_parsers:
+            self.log.debug('detected'
+                           ' event_type {0!r}'.format(event.event_type))
             for event_parser in self.event_parsers[event.event_type]:
                 # check if match
                 match = event_parser.matches(event)
                 response = None
                 if match is True:
-                    self.log.debug('running event_parser {0!r}'.format(event_parser))
+                    self.log.debug('running'
+                                   ' event_parser {0!r}'.format(event_parser))
                     response = self._run_event_processor(event_parser, event)
                 elif isinstance(match, SRE_MATCH_TYPE):
-                    self.log.debug('running event_parser {0!r} with regex results {1!r}'.format(event_parser,
-                                                                                                match.groups()))
-                    response = self._run_event_processor(event_parser, event, *match.groups())
+                    self.log.debug('running event_parser {0!r}'
+                                   ' with regex results'
+                                   '{1!r}'.format(event_parser,
+                                                  match.groups()))
+                    response = self._run_event_processor(event_parser,
+                                                         event,
+                                                         *match.groups())
 
                 if response is not None:
                     responses.append(response)
@@ -454,7 +505,7 @@ class PluginManager(object):
             response.addCallback(self.process_result, event)
 
         return responses
-        #defer.returnValue(responses)
+        # defer.returnValue(responses)
 
     # def emit_action() - out of band action to the bot.
 
@@ -490,7 +541,7 @@ class PluginManager(object):
             return action
 
 
-#TODO: completely changed, need to rework this...
+# TODO: completely changed, need to rework this...
 class BotPlugin(object):
     """
     base plugin class
@@ -499,20 +550,22 @@ class BotPlugin(object):
     event_version = '1'
     built_in = False  # is this a packaged plugin
 
-    #TODO: make a 'task' decorator...
+    # TODO: make a 'task' decorator...
     def __init__(self, bot=None, config=None):
         """
         don't touch me. plz?
 
         each bot that spins up, loads its own plugin instance
 
-        TODO: move the stuff in here to a separate func and call it after we initialize the instance.
+        TODO: move the stuff in here to a separate func and call it after we
+            initialize the instance.
             that way they can do whatever they want in init
         """
         self.bot = bot
         self.config = config
 
-        self.log = logging.getLogger('{0}.{1}'.format(self.__module__, self.__class__.__name__))
+        self.log = logging.getLogger('{0}.{1}'.format(self.__module__,
+                                                      self.__class__.__name__))
 
         self._active = False  # is this instance active?
         self._delayed_tasks = []  # tasks scheduled to run in the future
@@ -536,29 +589,34 @@ class BotPlugin(object):
         try:
             a = self.build_action(action_data=response, event=event)
         except Exception:
-            self.log.exception('failed to build action from plugin task {0!r}, {1!r}, {2!r}'.format(response, args,
-                                                                                                    kwargs))
+            self.log.exception('failed to build action from plugin task '
+                               '{0!r}, {1!r}, {2!r}'.format(response,
+                                                            args,
+                                                            kwargs))
         else:
             self.log.debug('wat: {0!r}'.format(a))
             if a is not None:
                 self._queue_action(a, event)
 
     def build_action(self, action_data, event=None):
-        #TODO this is hacky - fix it.
+        # TODO this is hacky - fix it.
         if type(action_data) in (str, unicode):
             try:
-                a = Action(source_bot=self.bot, source_event=event).msg(action_data)
+                a = Action(source_bot=self.bot,
+                           source_event=event).msg(action_data)
             except Exception:
-                logging.exception('failed to build action from {0!r}, for {1!r}'.format(action_data, event))
+                logging.exception('failed to build action'
+                                  ' from {0!r}, for {1!r}'.format(action_data,
+                                                                  event))
             else:
                 return a
-
 
     @defer.inlineCallbacks
     def _plugin_task_runner(self, func, *args, **kwargs):
         try:
             if getattr(func, '__brutal_threaded', False):
-                self.log.debug('executing plugin task in thread')  # add func details
+                # add func details
+                self.log.debug('executing plugin task in thread')
                 response = yield threads.deferToThread(func, *args, **kwargs)
             else:
                 self.log.debug('executing plugin task')  # add func details
@@ -571,9 +629,16 @@ class BotPlugin(object):
 
     def delay_task(self, delay, func, *args, **kwargs):
         if inspect.isfunction(func) or inspect.ismethod(func):
-            self.log.debug('scheduling task {0!r} to run in {1} seconds'.format(func.__name__, delay))
+            self.log.debug('scheduling task {0!r} to run in '
+                           '{1} seconds'.format(func.__name__,
+                                                delay))
             # trying this.. but should probably just use callLater
-            d = task.deferLater(reactor, delay, self._plugin_task_runner, func, *args, **kwargs)
+            d = task.deferLater(reactor,
+                                delay,
+                                self._plugin_task_runner,
+                                func,
+                                *args,
+                                **kwargs)
             self._delayed_tasks.append(d)
 
     def loop_task(self, loop_time, func, *args, **kwargs):
@@ -582,10 +647,15 @@ class BotPlugin(object):
         Note: If the ``now`` parameter is present and set to True the function
         is called right after declaration too."""
         if inspect.isfunction(func) or inspect.ismethod(func):
-            self.log.debug('scheduling task {0!r} to run every {1} seconds'.format(func.__name__, loop_time))
+            self.log.debug('scheduling task {0!r} to'
+                           ' run every {1} seconds'.format(func.__name__,
+                                                           loop_time))
             now = kwargs.pop('now', True)
-            #event = kwargs.pop('event', None)
-            t = task.LoopingCall(self._plugin_task_runner, func, *args, **kwargs)
+            # event = kwargs.pop('event', None)
+            t = task.LoopingCall(self._plugin_task_runner,
+                                 func,
+                                 *args,
+                                 **kwargs)
             t.start(loop_time, now)
             self._looping_tasks.append(t)
 
@@ -625,7 +695,8 @@ class BotPlugin(object):
             else:
                 reactor.callFromThread(self.bot.route_response, action, event)
         else:
-            self.log.error('tried to queue invalid action: {0!r}'.format(action))
+            self.log.error('tried to queue invalid action: '
+                           '{0!r}'.format(action))
 
     def msg(self, msg, room=None, event=None):
         a = Action(source_bot=self.bot, source_event=event).msg(msg, room=room)
@@ -634,7 +705,9 @@ class BotPlugin(object):
     # internal
 
     def enable(self):
-        self.log.info('enabling plugin on {0!r}: {1!r}'.format(self.bot, self.__class__.__name__))
+        cls = self.__class__
+        self.log.info('enabling plugin on {0!r}: {1!r}'.format(self.bot,
+                                                               cls.__name__))
 
         # eh. would like to be able to resume... but that's :effort:
         self._delayed_tasks = []
@@ -644,7 +717,9 @@ class BotPlugin(object):
         self._active = True
 
     def disable(self):
-        self.log.info('disabling plugin on {0!r}: {1!r}'.format(self.bot, self.__class__.__name__))
+        cls = self.__class__
+        self.log.info('disabling plugin on {0!r}: {1!r}'.format(self.bot,
+                                                                cls.__name__))
         self._active = False
 
         for func in self._delayed_tasks:
@@ -664,30 +739,32 @@ class BotPlugin(object):
 # #                if self._is_match(event):
 #                 self._parse_event(event)
 #
-    #min_version
-    #max_version
+    # min_version
+    # max_version
     def _version_matches(self, event):
-        #TODO: ugh.. figure out what i want to do here...
+        # TODO: ugh.. figure out what i want to do here...
         if event.version == self.event_version:
             return True
         return False
 
     def setup(self, *args, **kwargs):
         """
-        use this to do any one off actions needed to initialize the bot once its active
+        use this to do any one off actions needed to initialize the bot once
+        it is active
         """
         pass
-        #raise NotImplementedError
+        # raise NotImplementedError
 
     def _is_match(self, event):
         """
         returns t/f based if the plugin should parse the event
         """
         return True
-        #raise NotImplementedError
+        # raise NotImplementedError
 
     def _parse_event(self, event):
         """
-        takes in an event object and does whatever the plugins supposed to do...
+        takes in an event object and does whatever the plugins supposed
+        to do...
         """
         raise NotImplementedError
