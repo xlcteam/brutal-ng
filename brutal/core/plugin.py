@@ -381,17 +381,35 @@ class PluginManager(object):
         pass
 
     def _register_plugin_functions(self, plugin_module):
+        """Register all (bare) functions form a module."""
+
         module_name = plugin_module.__name__
         self.log.debug('loading plugins from module {0!r}'.format(module_name))
 
-        # step through all functions in module
-        for func_name, func in inspect.getmembers(plugin_module,
-                                                  inspect.isfunction):
+        module_functions = inspect.getmembers(plugin_module,
+                                              inspect.isfunction)
+        self._build_parser(module_functions, plugin_module, module_name)
+
+    def _register_plugin_class_methods(self, plugin_instance):
+        """Register all functions from an instance of a class."""
+
+        class_name = plugin_instance.__class__.__name__
+        self.log.debug('loading plugins'
+                       ' from instance of {0!r}'.format(class_name))
+
+        plugin_methods = inspect.getmembers(plugin_instance, inspect.ismethod)
+        self._build_parser(plugin_methods, plugin_instance, class_name)
+
+    def _build_parser(self, functions, source, name):
+        """Creates a parser for both functions that reside either directly in
+        `source` which means that they can reside in modules or objects
+        (classes). """
+        for func_name, func in functions:
             try:
-                parser = Parser.build_parser(func=func, source=plugin_module)
+                parser = Parser.build_parser(func=func, source=source)
             except Exception:
-                self.log.exception('failed to build parser from {0} ({1})'
-                                   .format(func_name, module_name))
+                self.log.exception('failed to build parser '
+                                   'from {0} ({1})'.format(func_name, name))
                 continue
             else:
                 if parser is not None:
@@ -405,28 +423,6 @@ class PluginManager(object):
                     if parser.event_type == 'cmd' and\
                        parser.command is not None:
                         self.cmd_docs[parser.command] = func.__doc__
-
-    def _register_plugin_class_methods(self, plugin_instance):
-        # TODO: should wrap this...
-        class_name = plugin_instance.__class__.__name__
-        self.log.debug('loading plugins'
-                       ' from instance of {0!r}'.format(class_name))
-
-        plugin_methods = inspect.getmembers(plugin_instance, inspect.ismethod)
-        for func_name, func in plugin_methods:
-            try:
-                parser = Parser.build_parser(func=func, source=plugin_instance)
-            except Exception:
-                self.log.exception('failed to build parser '
-                                   'from {0} ({1})'.format(func_name,
-                                                           class_name))
-                continue
-            else:
-                if parser is not None:
-                    if parser.event_type in self.event_parsers:
-                        self.event_parsers[parser.event_type].append(parser)
-                    else:
-                        self.event_parsers[parser.event_type] = [parser, ]
 
     # event processing
     @defer.inlineCallbacks
