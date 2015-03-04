@@ -24,3 +24,10 @@ Backwards compatibility
 ``brutal-ng`` tries to be as backwards compatible as possible. The goal is
 to be able to replace ``brutal`` with ``brutal-ng`` and not to be required
 to change any plugin you wrote for the older version.
+
+Tests
+------
+
+Believe it or not, we do have some tests now. To run them you can execute::
+
+    nosetests tests/
