@@ -1,11 +1,13 @@
+
+# Set default logging handler
+import logging
+
 __title__ = 'brutal'
-__version__ = '0.3.6'
+__version__ = '0.3.7'
 __author__ = 'Corey Bertram'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2013 Corey Bertram'
 
-# Set default logging handler
-import logging
 
 # python < 2.7 compatibility
 try:
