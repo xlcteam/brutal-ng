@@ -136,7 +136,7 @@ class Bot(object):
         changed in event['meta'] to reflect the data in opt."""
         evt = event
         for x in opt.keys():
-            evt['meta'][x] = opt[x]
+            evt.meta[x] = opt[x]
         self.new_event(evt)
 
     def build_event(self, event_data):
