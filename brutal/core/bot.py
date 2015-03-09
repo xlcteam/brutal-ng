@@ -131,16 +131,8 @@ class Bot(object):
         """
         self.event_queue.put(event)
 
-    def clone_event(self, event, opt):
-        """Takes an event and adds its copy to the event_queue with data
-        changed in event['meta'] to reflect the data in opt."""
-        evt = event
-        for x in opt.keys():
-            evt.meta[x] = opt[x]
-        self.new_event(evt)
-
     def build_event(self, event_data):
-        #todo: needs to be safe
+        # todo: needs to be safe
         try:
             e = Event(source_bot=self, raw_details=event_data)
         except Exception as e:
