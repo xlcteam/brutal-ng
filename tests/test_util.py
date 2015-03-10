@@ -13,17 +13,16 @@ def test_split_args_by():
 
 
 def test_change_cmd():
-    Bot = namedtuple('Bot', 'command_token')
-    bot = Bot._make('!')
+    Bot = namedtuple('Bot', 'command_token nick')
+    bot = Bot._make(['!', 'bot'])
     evt = Event(source_bot=bot, raw_details={
-        'cmd': 'test',
+        'type': 'message',
+        'source': 'room',
         'meta': {
-            'body': '!test'
+            'body': '!test',
+            'recipients': []
         }
     })
-
-    # TODO: seriously simulate processing
-    evt.cmd = 'test'
 
     event = change_cmd(evt, 'result')
     assert event.cmd == 'result'
