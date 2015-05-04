@@ -230,18 +230,25 @@ class XmppBackend(ProtocolBackend):
     def handle_action(self, action):
         self.log.debug('XMPP ACTION : {0!r}'.format(action))
 
-        if action.action_type == 'message':
-            body = action.meta.get('body')
-            if body:
-                if action.destination_rooms:
-                    for room in action.destination_rooms:
-                        if action.scope == 'public':
-                            room_jid = jid.internJID(room)
-                            message = muc.GroupChat(recipient=room_jid, body=body)
-                            self.client.send(message.toElement())
-                        if action.scope == 'private':
-                            if room != None:
-                                msg = xmppim.Message(recipient=jid.internJID(room),
-                                                     sender=self.bot_jid,
-                                                     body=body)
-                                self.client.send(msg.toElement())
+        if action.action_type != 'message':
+            return
+
+        body = str(action.meta.get('body'))
+        if not body:
+            return
+
+        if not action.destination_rooms:
+            return
+
+        for room in action.destination_rooms:
+            if action.scope == 'public':
+                room_jid = jid.internJID(room)
+                message = muc.GroupChat(recipient=room_jid, body=body)
+                self.client.send(message.toElement())
+
+            if action.scope == 'private':
+                if room is not None:
+                    msg = xmppim.Message(recipient=jid.internJID(room),
+                                         sender=self.bot_jid,
+                                         body=body)
+                    self.client.send(msg.toElement())

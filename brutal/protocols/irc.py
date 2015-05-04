@@ -318,17 +318,17 @@ class SimpleIrcBotProtocol(irc.IRCClient):
     """
     event_version = '1'
 
-    recipients_split_regex = '^((?:[\s]*[0-9A-Za-z_-~]{0,12}[\s]*:[\s]*)+)(.*)$'
-
+    RECIPIENTS_SPLIT_REGEX = '^((?:[\s]*[0-9A-Za-z_-~]{0,12}[\s]*:[\s]*)+)(.*)$'
+    DIRECT_REPLY = '{who}: {what}'
 
     def __init__(self):
         self.channel_users = {}
-        #TODO: accept these as init vars
+        # TODO: accept these as init vars
         self.hostname = 'brutal_bot'
         self.realname = 'brutal_bot'
         self.username = 'brutal_bot'
 
-        self.recipients_regex = re.compile(self.recipients_split_regex)
+        self.recipients_regex = re.compile(self.RECIPIENTS_SPLIT_REGEX)
 
     @property
     def nickname(self):
@@ -537,20 +537,29 @@ class SimpleIrcBotProtocol(irc.IRCClient):
 
     def _bot_process_action(self, action):
         log.msg('irc acting on {0!r}'.format(action), logLevel=logging.DEBUG)
-        if action.action_type == 'message':
-            body = action.meta.get('body')
-            if body:
-                log.msg('action {0!r}'.format(vars(action)), logLevel=logging.DEBUG)
-                for dest in action.destination_rooms:
-                    if dest:
-                        if dest[0] == '#':
-                            if action.source == 'highlight':
-                                msg = action.source_event.meta['nick'] + ': ' + body
-                                self.say(dest, msg)
-                            else:
-                                self.say(dest, body)
-                        else:
-                            self.msg(dest, body)
+        if action.action_type != 'message':
+            return
+
+        body = str(action.meta.get('body'))
+        if not body:
+            return
+
+        log.msg('action {0!r}'.format(vars(action)), logLevel=logging.DEBUG)
+        for dest in action.destination_rooms:
+            if not dest:
+                continue
+
+            if dest[0] == '#':
+                if action.source == 'highlight':
+                    msg = DIRECT_REPLY.format({
+                        'who': action.source_event.meta['nick'],
+                        'what': body
+                    })
+                    self.say(dest, msg)
+                else:
+                    self.say(dest, body)
+            else:
+                self.msg(dest, body)
 
 
 class IrcBotClient(protocol.ReconnectingClientFactory):
