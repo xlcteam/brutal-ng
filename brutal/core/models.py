@@ -270,7 +270,7 @@ class Action(object):
 
 
 
-        self.log.debug('source_event {0!r}'.format(vars(self.source_event)))
+        self.log.debug('source_event {0!r}'.format(self.source_event))
 
     def __repr__(self):
         return "<{0} {1}:{2} dest:{3}>".format(self.__class__.__name__, self.source_bot.nick, self.action_type,

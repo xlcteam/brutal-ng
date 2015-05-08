@@ -352,7 +352,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
         match = self.recipients_regex.findall(message)
         if match != []:
             cleaned_recipients = match[0][0].strip().split(':')[:-1]
-            recipients = [recipient.strip() for recipient in cleaned_recipients]
+            recipients = [recip.strip() for recip in cleaned_recipients]
 
         event_data = {'type': 'message',
                       'scope': 'private',
@@ -362,8 +362,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                           'body': message,
                           'nick': nick,
                           'host': host}
-                    }
-
+                      }
 
         # parse if we're the owner / message was to bot directly
         if channel == self.nickname:
@@ -377,7 +376,6 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                 event_data['meta']['body'] = match[0][1].strip()
             else:
                 event_data['source'] = 'room'
-            
 
         self._bot_process_event(event_data)
 
@@ -440,6 +438,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                             'from': user
                           }}
 
+        self.factory.backend.nick_list[channel].append(user)
         self._bot_process_event(event_data)
 
     def userLeft(self, user, channel):
@@ -454,6 +453,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                             'from': user
                           }}
 
+        self.factory.backend.nick_list[channel].remove(user)
         self._bot_process_event(event_data)
 
     def userQuit(self, user, quitMessage):
@@ -470,6 +470,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                                 'message': quitMessage
                               }}
 
+            self.factory.backend.nick_list[channel].remove(user)
             self._bot_process_event(event_data)
 
 
@@ -486,6 +487,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                             'kickee': kickee
                           }}
 
+        self.factory.backend.nick_list[channel].remove(user)
         self._bot_process_event(event_data)
 
 
@@ -520,10 +522,17 @@ class SimpleIrcBotProtocol(irc.IRCClient):
                                 'from': oldname,
                                 'new_name': newname
                               }}
-
+            self.factory.backend.nick_list[channel].remove(oldname)
+            self.factory.backend.nick_list[channel].append(newname)
             self._bot_process_event(event_data)
 
-
+    def irc_RPL_NAMREPLY(self, prefix, params):
+        log.msg('irc_RPL_NAMREPLY - prefix: {0!r}, {1!r}'.format(prefix, params), logLevel=logging.DEBUG)
+        channel = params[2].lower()
+        nicklist = []
+        for name in params[3].split(' '):
+            nicklist.append(name)
+        self.factory.backend.nick_list[channel] = nicklist
 
     #-- BOT SPECIFIC
     def _bot_process_event(self, raw_event):
@@ -613,7 +622,7 @@ class IrcBackend(ProtocolBackend):
     protocol_name = 'irc'
 
     def configure(self, *args, **kwargs):
-        #TODO: add log_traffic for IRC
+        # TODO: add log_traffic for IRC
         self.log_traffic = kwargs.get('log_traffic', False)
         self.server = kwargs.get('server', 'localhost')
         self.port = kwargs.get('port', IRC_DEFAULT_PORT)
@@ -623,8 +632,11 @@ class IrcBackend(ProtocolBackend):
         self.password = kwargs.get('password')
 
         self.rooms = kwargs.get('channels') or kwargs.get('rooms', [])
+        self.nick_list = {}
 
-        self.client = IrcBotClient(self.rooms, nickname=self.nick, backend=self)
+        self.client = IrcBotClient(self.rooms,
+                                   nickname=self.nick,
+                                   backend=self)
 
     def connect(self, *args, **kwargs):
         """
