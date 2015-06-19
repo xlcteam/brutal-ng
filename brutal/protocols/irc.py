@@ -560,7 +560,7 @@ class SimpleIrcBotProtocol(irc.IRCClient):
 
             if dest[0] == '#':
                 if action.source == 'highlight':
-                    msg = DIRECT_REPLY.format({
+                    msg = self.DIRECT_REPLY.format({
                         'who': action.source_event.meta['nick'],
                         'what': body
                     })
