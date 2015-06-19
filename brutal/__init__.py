@@ -3,7 +3,7 @@
 import logging
 
 __title__ = 'brutal'
-__version__ = '0.3.10'
+__version__ = '0.3.11'
 __author__ = 'Corey Bertram'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2013 Corey Bertram'
