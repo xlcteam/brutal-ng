@@ -27,7 +27,7 @@ setup(
     install_requires=[
         'Twisted >= 12.1.0',
         'wokkel == 0.7.1',
-        'pyOpenSSL == 0.13',
+        'pyOpenSSL == 17.5.0',
         'service-identity == 14.0.0',
     ],
 
